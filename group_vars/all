@@ -1,6 +1,9 @@
 
 cluster_ram_quota: 512
 
+ldap_users: user1,user2,user3
+ldap_role: admin
+
 buckets:
    - name: config
      ram: 256

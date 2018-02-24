@@ -33,7 +33,6 @@
     -c {{ ansible_fqdn }}:8091  
     -u {{ admin_user }} 
     --password {{ admin_password }} 
-    --set-users=lreimus,philip,bashir
-    --set-names=Leszek\ Reimus,Philip\ Han,Bashir
-    --roles=admin
+    --set-users={{ ldap_users }}
+    --roles={{ ldap_role }}
   when: projector.stat.exists == False
