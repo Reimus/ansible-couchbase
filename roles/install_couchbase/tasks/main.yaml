@@ -1,0 +1,22 @@
+- name: Ensures {{ ansible_env.HOME }}/ansible_artifacts/couchbase dir exists
+  file: path={{ ansible_env.HOME }}/ansible_artifacts/couchbase state=directory recurse=yes mode=0700
+
+- name: Copy Couchbase deb file
+  copy:
+    src: "files/couchbase-server-enterprise_4.6.3-debian8_amd64.deb"
+#    dest: "/root/artifacts/couchbase-server-enterprise_4.6.3-debian8_amd64.deb"
+    dest: "{{ ansible_env.HOME }}/ansible_artifacts/couchbase/couchbase-server-enterprise_4.6.3-debian8_amd64.deb"
+    mode: 0600
+    force: no
+
+- name: Install couchbase
+  apt:
+    deb: "{{ ansible_env.HOME }}/ansible_artifacts/couchbase/couchbase-server-enterprise_4.6.3-debian8_amd64.deb"
+
+- name: Pause 5 sec
+  pause: seconds=5
+
+#- name: Clean artifact path
+#  file:
+#    state: absent
+#    path: "/root/couchbase-server-enterprise_4.6.3-debian8_amd64.deb"

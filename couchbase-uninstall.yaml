@@ -1,0 +1,39 @@
+---
+# 
+# Uninstall Couchbase cluster from a single command
+#
+
+- name: Get Facts
+  hosts: all
+  tasks:
+    - name: NOOP
+      shell: /bin/true
+      when: 1==0
+
+- name: Uninstall XDCR Reverse links
+  hosts: couchbase-xdcr-edges
+  gather_facts: no
+  roles:
+    - uninstall_xdcr_reverse
+
+- name: Uninstall XDCR Forward links
+  hosts: couchbase-main
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: uninstall_xdcr_forward
+      private: yes
+      vars:
+         xdcr_host: "{{ role_item[0] }}"
+      with_nested:
+         - "{{ groups['couchbase-xdcr-edges'] }}"
+         - "{{ groups['couchbase-xdcr-edges'] }}"
+      loop_control:
+         loop_var: "role_item"
+
+- name: Couchbase Installation
+  hosts: couchbase-cluster
+  gather_facts: no
+  roles:
+    - uninstall_couchbase
+

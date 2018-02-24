@@ -1,0 +1,23 @@
+
+cluster_ram_quota: 512
+
+buckets:
+   - name: config
+     ram: 256
+     replicaNumber: 0
+     saslPassword: abcde
+     bucketType: couchbase
+     evictionPolicy: valueOnly #valueOnly or fullEviction
+     parallelDBAndViewCompaction: false
+     pri: low
+     xdcr: True
+   - name: pixel
+     ram: 100
+     replicaNumber: 0
+     saslPassword: abcde
+     bucketType: couchbase
+     evictionPolicy: valueOnly #valueOnly or fullEviction
+     parallelDBAndViewCompaction: false
+     pri: low
+     xdcr: False
+

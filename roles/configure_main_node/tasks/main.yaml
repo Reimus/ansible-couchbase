@@ -1,0 +1,39 @@
+- name: Test if main node is configured
+  stat: path=/opt/couchbase/var/lib/couchbase/logs/projector.log
+  register: projector
+- name: Configure main node for {{ ansible_fqdn }}
+  shell: >
+    /opt/couchbase/bin/couchbase-cli 
+    cluster-init 
+    -c {{ ansible_fqdn }}:8091  
+    --cluster-init-username={{ admin_user }} 
+    --cluster-init-password={{ admin_password }} 
+    --cluster-init-port=8091 
+    --cluster-init-ramsize={{ cluster_ram_quota }} 
+  when: projector.stat.exists == False
+
+- name: Pause 5 sec
+  pause: seconds=5
+  when: projector.stat.exists == False
+
+- name: Configure ldap for {{ ansible_fqdn }}
+  shell: >
+    /opt/couchbase/bin/couchbase-cli 
+    setting-ldap 
+    -c {{ ansible_fqdn }}:8091  
+    -u {{ admin_user }} 
+    --password {{ admin_password }} 
+    --ldap-enabled 1 
+  when: projector.stat.exists == False
+
+- name: Configure ldap users for {{ ansible_fqdn }}
+  shell: >
+    /opt/couchbase/bin/couchbase-cli 
+    admin-role-manage
+    -c {{ ansible_fqdn }}:8091  
+    -u {{ admin_user }} 
+    --password {{ admin_password }} 
+    --set-users=lreimus,philip,bashir
+    --set-names=Leszek\ Reimus,Philip\ Han,Bashir
+    --roles=admin
+  when: projector.stat.exists == False

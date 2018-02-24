@@ -1,0 +1,17 @@
+[couchbase-main]
+10.0.12.71 ansible_become=true 
+
+[couchbase-main:vars]
+admin_user=Administrator
+admin_password=123456789
+
+[couchbase-nodes]
+
+[couchbase-cluster:children]
+couchbase-main
+couchbase-nodes
+
+[couchbase-xdcr-edges]
+webcache admin_user=Administrator admin_password=12345678 ansible_become=true
+#10.0.12.71 admin_user=Administrator admin_password=123456789 ansible_become=true
+

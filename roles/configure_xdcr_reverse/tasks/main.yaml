@@ -1,0 +1,50 @@
+- name: Test if XDCR is configured
+  shell: >
+    /opt/couchbase/bin/couchbase-cli 
+    xdcr-setup 
+    -c {{ ansible_fqdn }}:8091
+    -u {{ admin_user }}
+    --password {{ admin_password }}
+    --list 
+    | 
+    grep -A1 "cluster name: {{ hostvars[groups['couchbase-main'][0]].ansible_nodename }}" 
+    | 
+    tail -n 1 
+    | 
+    awk '{print $2}'
+  register: xdcr_list
+
+
+#- name: Show Result
+#  debug: 
+#    msg: "{{xdcr_list.stdout_lines}}"
+
+- name: DEBUG for xdcr edge {{ ansible_fqdn }}
+  shell: >
+    /opt/couchbase/bin/couchbase-cli
+    xdcr-setup
+    -c {{ ansible_fqdn }}:8091
+    -u {{ admin_user }}
+    --password {{ admin_password }}
+    --xdcr-cluster-name={{ hostvars[groups['couchbase-main'][0]].ansible_nodename }}
+    --xdcr-hostname={{ hostvars[groups['couchbase-main'][0]].ansible_fqdn }}:8091
+    --xdcr-username={{ hostvars[groups['couchbase-main'][0]].admin_user }}
+    --xdcr-password={{ hostvars[groups['couchbase-main'][0]].admin_password }}
+  when: xdcr_list.stdout_lines.0 is not defined
+
+
+- name: DEBUG for xdcr edge {{ xdcr_host }} - set repliaction
+  shell: >
+    /opt/couchbase/bin/couchbase-cli 
+    xdcr-replicate
+    -c {{ ansible_fqdn }}:8091
+    -u {{ admin_user }}
+    --password {{ admin_password }}
+    --create
+    --xdcr-cluster-name={{ hostvars[groups['couchbase-main'][0]].ansible_nodename }}
+    --xdcr-from-bucket={{ item.name }}
+    --xdcr-to-bucket={{ item.name }}
+    --filter-expression=^P_
+  with_items: "{{ buckets }}"
+  when: item.xdcr == True and xdcr_list.stdout_lines.0 is not defined
+

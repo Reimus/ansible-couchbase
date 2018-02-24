@@ -1,0 +1,39 @@
+- name: Test if XDCR is configured
+  shell: >
+    /opt/couchbase/bin/couchbase-cli 
+    xdcr-setup 
+    -c {{ ansible_fqdn }}:8091
+    -u {{ admin_user }}
+    --password {{ admin_password }}
+    --list 
+    | 
+    grep -A1 "cluster name: {{ hostvars[groups['couchbase-main'][0]].ansible_nodename }}"
+    | 
+    tail -n 1 
+    | 
+    awk '{print $2}'
+  register: xdcr_list
+
+- name: Configure xdcr edge {{ xdcr_host }} - delete repliaction
+  shell: >
+    /opt/couchbase/bin/couchbase-cli 
+    xdcr-replicate
+    -c {{ ansible_fqdn }}:8091
+    -u {{ admin_user }}
+    --password {{ admin_password }}
+    --delete
+    --xdcr-replicator={{ xdcr_list.stdout_lines.0 }}/{{ item.name }}/{{ item.name }}
+  with_items: "{{ buckets }}"
+  when: item.xdcr == True and xdcr_list.stdout_lines.0 is defined
+
+- name: Configure xdcr for {{ ansible_fqdn }}
+  shell: >
+    /opt/couchbase/bin/couchbase-cli 
+    xdcr-setup 
+    -c {{ ansible_fqdn }}:8091
+    -u {{ admin_user }}
+    --password {{ admin_password }}
+    --delete
+    --xdcr-cluster-name={{ hostvars[groups['couchbase-main'][0]].ansible_nodename }}
+  when: xdcr_list.stdout_lines.0 is defined
+

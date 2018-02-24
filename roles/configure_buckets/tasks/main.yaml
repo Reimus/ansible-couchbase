@@ -1,0 +1,13 @@
+- name: Create Bucket
+  uri:
+    url: http://localhost:8091/pools/default/buckets
+    method: POST
+    user: "{{ admin_user }}"
+    password: "{{ admin_password }}"
+    body: "authType=sasl&bucketType={{ item.bucketType }}&name={{ item.name }}&ramQuotaMB={{ item.ram }}&saslPassword={{ item.saslPassword }}&replicaNumber={{ item.replicaNumber }}"
+    status_code: 202
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+  failed_when: false
+  with_items:
+    - "{{ buckets }}"

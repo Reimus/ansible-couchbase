@@ -1,0 +1,63 @@
+---
+# 
+# Uninstall Couchbase cluster from a single command
+#
+- name: Get Facts
+  hosts: all
+  tasks:
+    - name: NOOP
+      shell: /bin/true
+      when: 1==0
+
+
+- name: Couchbase Installation
+  hosts: couchbase-cluster
+  gather_facts: no
+  roles:
+    - install_couchbase
+
+- name: Configure 1st node
+  hosts: couchbase-main
+  gather_facts: no
+  roles:
+    - role: configure_main_node
+    - role: configure_buckets
+
+- name: Configure other nodes
+  hosts: couchbase-main
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: add_node
+      private: yes
+      vars:
+         xdcr_host: "{{ role_item[0] }}"
+      with_nested:
+         - "{{ groups['couchbase-nodes'] }}"
+         - "{{ groups['couchbase-nodes'] }}"
+      loop_control:
+         loop_var: "role_item"
+
+
+- name: Setup XDCR Reverse
+  hosts: couchbase-xdcr-edges
+  gather_facts: no
+  roles:
+    - configure_xdcr_reverse
+
+
+- name: Setup XDCR Forward
+  hosts: couchbase-main
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: configure_xdcr_forward 
+      private: yes
+      vars:
+         xdcr_host: "{{ role_item[0] }}"
+      with_nested:
+         - "{{ groups['couchbase-xdcr-edges'] }}"
+         - "{{ groups['couchbase-xdcr-edges'] }}"
+      loop_control:
+         loop_var: "role_item"
+
